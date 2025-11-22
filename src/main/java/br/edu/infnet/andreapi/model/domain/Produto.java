@@ -2,15 +2,33 @@ package br.edu.infnet.andreapi.model.domain;
 
 public class Produto {
 	
-	// Atributos essenciais
+
+	// Tornei meus atributos privados
+	private int estoque;
+	private String nome;
+	private boolean disponivel;
+	private double preco;
+	private String descricao;
 	
-	public int estoque;
-	public String nome;
-	public boolean disponivel;
-	public double preco;
-	public String descricao;
+	private Categoria categoria; // Relacionamento com a classe Categoria
 	
-	// Métodos Personalizados
+	// Construtor padrão
+	public Produto() {
+	}
+	
+	// Construtor com Nome e Preço (Estado inicial específico)
+    public Produto(String nome, double preco) {
+        this.nome = nome;
+        this.preco = preco;
+        this.disponivel = true; // Define um padrão
+    }
+
+    // Construtor Completo (Chama o construtor acima para evitar duplicação)
+    public Produto(String nome, double preco, int estoque, Categoria categoria) {
+        this(nome, preco); // Chama o construtor de 2 parâmetros (Reaproveitamento)
+        this.estoque = estoque;
+        this.categoria = categoria;
+    }
 	
 	
 	// Feature 01: Método público que aplica um desconto ao preço do produto. Ele chama um método privado para fazer o cálculo.
@@ -34,6 +52,22 @@ public class Produto {
 		}
 	}
 	
+	// SOBRECARGA: Mesmo nome, parâmetros diferentes. Feature 03
+    // Permite aplicar um desconto fixo em reais, em vez de porcentagem.
+    public void aplicarDesconto(double valorDesconto, boolean isValorFixo) {
+        if (isValorFixo) {
+            if (valorDesconto < this.preco) {
+                this.preco -= valorDesconto;
+                System.out.println("Desconto de R$" + valorDesconto + " aplicado.");
+            } else {
+                System.out.println("Erro: Desconto maior que o preço.");
+            }
+        } else {
+            // Se não for fixo, assume que é porcentagem e chama o outro método
+            aplicarDesconto(valorDesconto);
+        }
+    }
+	
 	// Método privado que calcula o valor do produto com o desconto aplicado.
 	private double calcularPrecoComDesconto(double percentual) {
 		double valorDoDesconto = (preco * percentual) / 100;
@@ -43,10 +77,23 @@ public class Produto {
 		return Math.round((preco - valorDoDesconto) * 100.0) / 100.0;
 	}
 	
+	// Método toString() para representação textual
+	@Override
+    public String toString() {
+		// Verifica se a categoria é nula para evitar problemas
+        String categoriaStr = (categoria != null) ? categoria.toString() : "Sem categoria";
+        
+        return "Produto: " + nome + " | R$ " + preco + 
+               " | Estoque: " + estoque + 
+               " | Categoria: " + categoriaStr;
+    }
+	
 	
 	// Para a Feature 02: Vamos adicionar um "Status" calculado.
+    // Feature 03: Mantivemos o imprimirDetalhes antigo para compatibilidade, mas usando toString é melhor
 	public void imprimirDetalhes() {
-		
+		// Código antigo comentado para referência
+		/*
 		String statusCalculado;
 		
 		if (disponivel && estoque > 0) {
@@ -67,6 +114,9 @@ public class Produto {
 						 "\nStatus: " + statusCalculado;
 						 
 		System.out.println(detalhes);
+		*/
+		
+		System.out.println(this.toString());
 	}
 	
 	/**
@@ -99,6 +149,26 @@ public class Produto {
 			System.out.println("Mês " + mes + ": R$ " + precoArredondado);
 		}
 	}
+	
+	//Métodos de Encapsulamento
+    
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+
+    public double getPreco() { return preco; }
+    public void setPreco(double preco) { this.preco = preco; }
+
+    public int getEstoque() { return estoque; }
+    public void setEstoque(int estoque) { this.estoque = estoque; }
+
+    public boolean isDisponivel() { return disponivel; }
+    public void setDisponivel(boolean disponivel) { this.disponivel = disponivel; }
+
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
+
+    public Categoria getCategoria() { return categoria; }
+    public void setCategoria(Categoria categoria) { this.categoria = categoria; }
 	
 	
 
