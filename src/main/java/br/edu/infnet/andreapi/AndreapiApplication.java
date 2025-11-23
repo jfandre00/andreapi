@@ -2,6 +2,7 @@
 
 package br.edu.infnet.andreapi;
 
+import java.math.BigDecimal; // Para poder usar BigDecimal - Sugestão do Rayslan - Muito obrigado!
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -23,7 +24,6 @@ public class AndreapiApplication {
         
         // Usando Lista conforme o requisito da Feature 03
         List<Produto> produtos = new ArrayList<>();
-        
         int opcao = -1;
 
         do {
@@ -35,14 +35,13 @@ public class AndreapiApplication {
             System.out.println("0. Sair");
             System.out.print("Escolha uma opção: ");
             
-            // Validação simples para o menu
             if(in.hasNextInt()) {
                 opcao = in.nextInt();
             } else {
-                in.next(); // Limpa a entrada inválida
-                opcao = -1; // Força o default
+                in.next(); 
+                opcao = -1; 
             }
-            in.nextLine(); // Limpa buffer
+            in.nextLine(); 
 
             switch (opcao) {
                 case 1:
@@ -51,12 +50,11 @@ public class AndreapiApplication {
                     System.out.print("Nome: ");
                     String nome = in.nextLine();
                     
-                    // VALIDAÇÃO DE PREÇO
-                    double preco = -1; // Começa inválido para entrar no loop
-                    while (preco < 0) {
+
+                    double precoInput = -1; 
+                    while (precoInput < 0) {
                         System.out.print("Preço: ");
-                        
-                        if (!in.hasNextDouble()) { // Verifica se é número
+                        if (!in.hasNextDouble()) { 
                             String entradaInvalida = in.next();
                             System.out.println("O preço informado é inválido!! [" + entradaInvalida + "]");
                         } else {
@@ -64,17 +62,17 @@ public class AndreapiApplication {
                             if (valorDigitado < 0) {
                                 System.out.println("O preço não pode ser menor que zero!!");
                             } else {
-                                preco = valorDigitado; // Valor válido, sai do loop
+                                precoInput = valorDigitado; // Valor válido, sai do loop
                             }
                         }
                         in.nextLine(); // Limpa o buffer após ler (ou tentar ler) o número
                     }
+                    // Alteração: Apesar de lermos double, vamos precisar converter para BigDecimal
+                    BigDecimal precoFinal = BigDecimal.valueOf(precoInput);
                     
-                    // --- VALIDAÇÃO DE ESTOQUE ---
                     int estoque = -1;
                     while (estoque < 0) {
                         System.out.print("Estoque: ");
-                        
                         if (!in.hasNextInt()) {
                             String entradaInvalida = in.next();
                             System.out.println("O estoque informado é inválido!! [" + entradaInvalida + "]");
@@ -86,7 +84,7 @@ public class AndreapiApplication {
                                 estoque = valorDigitado;
                             }
                         }
-                        in.nextLine(); // Limpa buffer
+                        in.nextLine(); 
                     }
 
                     System.out.print("Descrição: ");
@@ -96,7 +94,6 @@ public class AndreapiApplication {
                     System.out.print("Descrição da Categoria (ex: Lanches): ");
                     String descCat = in.nextLine();
                     
-                    // Validação para o tipo da categoria
                     int tipoOpcao = 0;
                     while (tipoOpcao < 1 || tipoOpcao > 3) {
                         System.out.println("Tipo da Categoria: [1] Comida [2] Bebida [3] Sobremesa");
@@ -114,7 +111,9 @@ public class AndreapiApplication {
                     else if(tipoOpcao == 3) tipoSelecionado = TipoCategoria.SOBREMESA;
 
                     Categoria novaCategoria = new Categoria(null, descCat, tipoSelecionado);
-                    Produto novoProduto = new Produto(nome, preco, estoque, novaCategoria);
+                    
+                    // Passamos o BigDecimal precoFinal para o construtor
+                    Produto novoProduto = new Produto(nome, precoFinal, estoque, novaCategoria);
                     
                     novoProduto.setDescricao(descricao); 
                     novoProduto.setDisponivel(true);
@@ -143,14 +142,11 @@ public class AndreapiApplication {
                         Produto ultimoProduto = produtos.get(produtos.size() - 1);
                         System.out.println("Aplicando desconto em: " + ultimoProduto.getNome()); 
 
-                        // VALIDAÇÃO DE DESCONTO (PERCENTUAL)
                         double porc = -1;
                         while (porc <= 0 || porc >= 100) {
                             System.out.print("Digite a % de desconto (entre 1 e 99): ");
-                            
                             if(!in.hasNextDouble()) {
-                                String invalido = in.next();
-                                System.out.println("Valor inválido!! [" + invalido + "]");
+                                in.next();
                             } else {
                                 double valor = in.nextDouble();
                                 if (valor <= 0 || valor >= 100) {
@@ -162,6 +158,8 @@ public class AndreapiApplication {
                             in.nextLine();
                         }
                         
+                        
+                        // O método aceita double e converte internamente, então ok!
                         ultimoProduto.aplicarDesconto(porc);
                         System.out.println("Novo preço: " + ultimoProduto.getPreco()); 
                     }
@@ -174,19 +172,21 @@ public class AndreapiApplication {
                         Produto ultimoProduto = produtos.get(produtos.size() - 1);
                         System.out.println("Aplicando desconto FIXO em: " + ultimoProduto.getNome());
 
-                        // VALIDAÇÃO DE DESCONTO (VALOR FIXO)
                         double valor = -1;
                         while (valor <= 0) {
                             System.out.print("Digite o valor em R$ para descontar: ");
-                            
                             if(!in.hasNextDouble()) {
-                                String invalido = in.next();
-                                System.out.println("Valor inválido!! [" + invalido + "]");
+                                in.next();
                             } else {
                                 double v = in.nextDouble();
+                                // A comparação de preço agora se faz necessária converter o double digitado para BigDecimal
+                                // Assim poderemos comparar com o preço do produto (que é BigDecimal)
+                                BigDecimal valorDigitadoBD = BigDecimal.valueOf(v);
+                                
                                 if (v <= 0) {
                                     System.out.println("O desconto deve ser positivo.");
-                                } else if (v >= ultimoProduto.getPreco()) {
+                                } else if (ultimoProduto.getPreco().compareTo(valorDigitadoBD) <= 0) {
+                                    // compareTo retorna <= 0 se o preço for menor ou igual ao desconto
                                     System.out.println("O desconto não pode ser maior que o preço do produto!");
                                 } else {
                                     valor = v;

@@ -1,5 +1,9 @@
 package br.edu.infnet.andreapi.model.domain;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+
 public class Produto {
 	
 
@@ -7,7 +11,7 @@ public class Produto {
 	private int estoque;
 	private String nome;
 	private boolean disponivel;
-	private double preco;
+	private BigDecimal preco;
 	private String descricao;
 	
 	private Categoria categoria; // Relacionamento com a classe Categoria
@@ -17,14 +21,14 @@ public class Produto {
 	}
 	
 	// Construtor com Nome e Preço (Estado inicial específico)
-    public Produto(String nome, double preco) {
+    public Produto(String nome, BigDecimal preco) {
         this.nome = nome;
         this.preco = preco;
         this.disponivel = true; // Define um padrão
     }
 
     // Construtor Completo (Chama o construtor acima para evitar duplicação)
-    public Produto(String nome, double preco, int estoque, Categoria categoria) {
+    public Produto(String nome, BigDecimal preco, int estoque, Categoria categoria) {
         this(nome, preco); // Chama o construtor de 2 parâmetros (Reaproveitamento)
         this.estoque = estoque;
         this.categoria = categoria;
@@ -45,7 +49,7 @@ public class Produto {
 			
 
 			} else { // percentual válido e produto disponível
-				double novoPreco = calcularPrecoComDesconto(percentual);
+				BigDecimal novoPreco = calcularPrecoComDesconto(percentual);
 				preco = novoPreco;
 				System.out.println("Desconto de " + percentual + "% aplicado. Novo preço: R$ " + novoPreco);
 			}
@@ -54,27 +58,42 @@ public class Produto {
 	
 	// SOBRECARGA: Mesmo nome, parâmetros diferentes. Feature 03
     // Permite aplicar um desconto fixo em reais, em vez de porcentagem.
-    public void aplicarDesconto(double valorDesconto, boolean isValorFixo) {
+    public void aplicarDesconto(double valorDescontoDouble, boolean isValorFixo) {
         if (isValorFixo) {
-            if (valorDesconto < this.preco) {
-                this.preco -= valorDesconto;
-                System.out.println("Desconto de R$" + valorDesconto + " aplicado.");
-            } else {
+        	
+        	// Convertendo o double recebido para BigDecimal para fazer a conta
+            BigDecimal valorDesconto = BigDecimal.valueOf(valorDescontoDouble);
+            
+            // Comparações em BigDecimal usam .compareTo()
+            // se preco < valorDesconto
+            if (this.preco.compareTo(valorDesconto) < 0) {
                 System.out.println("Erro: Desconto maior que o preço.");
+            } else {
+                // Subtração: this.preco = this.preco.subtract(valorDesconto)
+                this.preco = this.preco.subtract(valorDesconto);
+                // Arredonda para 2 casas
+                this.preco = this.preco.setScale(2, RoundingMode.HALF_UP);
+                System.out.println("Desconto de R$" + valorDescontoDouble + " aplicado.");
             }
         } else {
             // Se não for fixo, assume que é porcentagem e chama o outro método
-            aplicarDesconto(valorDesconto);
+            aplicarDesconto(valorDescontoDouble);
         }
     }
 	
 	// Método privado que calcula o valor do produto com o desconto aplicado.
-	private double calcularPrecoComDesconto(double percentual) {
-		double valorDoDesconto = (preco * percentual) / 100;
-		
-		// vamos arredondar o valor do desconto para duas casas decimais
-			
-		return Math.round((preco - valorDoDesconto) * 100.0) / 100.0;
+	private BigDecimal calcularPrecoComDesconto(double percentual) {
+		// Lógica: Preço - (Preço * (Percentual / 100))
+        
+        BigDecimal percentualBD = BigDecimal.valueOf(percentual)
+                .divide(BigDecimal.valueOf(100)); // Divide por 100
+        
+        BigDecimal valorDoDesconto = this.preco.multiply(percentualBD); // Multiplica
+        
+        BigDecimal resultado = this.preco.subtract(valorDoDesconto); // Subtrai
+        
+        // 2 casas decimais com arredondamento padrão bancário
+        return resultado.setScale(2, RoundingMode.HALF_UP);
 	}
 	
 	// Método toString() para representação textual
@@ -119,44 +138,51 @@ public class Produto {
 		System.out.println(this.toString());
 	}
 	
+	
 	/**
 	 * Feature 2 - requisito 3
 	 * Método que usa um for para simular uma previsão de preço p/ um nº fixo de meses.
 	 */
 	public void exibirPrevisaoDePreco(int totalMeses) {
-		if (this.preco <= 0) {
-			System.out.println("Não é possível calcular a previsão para um produto sem preço ou com preço zero.");
-			return; // esse return é como um break e sai do método
-		}
+        if (this.preco.compareTo(BigDecimal.ZERO) <= 0) {
+            System.out.println("Não é possível calcular a previsão para um produto sem preço.");
+            return;
+        }
 
-		System.out.println("--- Previsão de Preço (próximos " + totalMeses + " meses) ---");
-		
-		double precoAtual = this.preco;
-		
-		for (int mes = 1; mes <= totalMeses; mes++) {
-			
-			// Vamos simular que no mês 3 há uma promoção e o preço não muda, para usarmos o continue (ex 4)
-			if (mes == 3) {
-				System.out.println("Mês " + mes + ": Promoção! O preço se mantém: R$ " + (Math.round(precoAtual * 100.0) / 100.0));
-				continue; // irá pular o resto do loop e move p/ a prox iteração (mês 4)
-			}
-			
-			// Simulação de aumento de 2% ao mês - depois vou criar uma constante para isso
-			precoAtual = precoAtual * 1.02; 
-
-			double precoArredondado = Math.round(precoAtual * 100.0) / 100.0;
-			
-			System.out.println("Mês " + mes + ": R$ " + precoArredondado);
-		}
-	}
+        System.out.println("--- Previsão de Preço (próximos " + totalMeses + " meses) ---");
+        
+        BigDecimal precoAtual = this.preco;
+        // Fator de aumento de 2% ( x 1.02)
+        BigDecimal fatorAumento = BigDecimal.valueOf(1.02);
+        
+        for (int mes = 1; mes <= totalMeses; mes++) {
+            if (mes == 3) {
+                System.out.println("Mês " + mes + ": Promoção! O preço se mantém: R$ " + precoAtual);
+                continue;
+            }
+            
+            // Multiplica e arredonda
+            precoAtual = precoAtual.multiply(fatorAumento).setScale(2, RoundingMode.HALF_UP);
+            
+            System.out.println("Mês " + mes + ": R$ " + precoAtual);
+        }
+    }
 	
 	//Métodos de Encapsulamento
     
-    public String getNome() { return nome; }
+	public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
 
-    public double getPreco() { return preco; }
-    public void setPreco(double preco) { this.preco = preco; }
+    // MUDANÇA: Getter e Setter devem ser BigDecimal
+    public BigDecimal getPreco() { return preco; }
+    
+    public void setPreco(BigDecimal preco) { 
+        this.preco = preco; 
+    }
+    // Sobrecarga utilitária para setar com double (caso necessário)
+    public void setPreco(double preco) {
+        this.preco = BigDecimal.valueOf(preco);
+    }
 
     public int getEstoque() { return estoque; }
     public void setEstoque(int estoque) { this.estoque = estoque; }
