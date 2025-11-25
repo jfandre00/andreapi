@@ -37,24 +37,25 @@ public class Produto {
 	
 	// Feature 01: Método público que aplica um desconto ao preço do produto. Ele chama um método privado para fazer o cálculo.
 	// Para a Feature 02, esse método irá verificar multiplas condições antes de aplicar o desconto.
+    // Refatorei o método após o feedback do Prof. Elberth pois havia uma verificação redundante. (25-11-2025)
 	public void aplicarDesconto(double percentual) {
-		if (percentual > 0 && percentual < 100) {
-			
-			
-			if (percentual <= 0 || percentual >= 100) {
-				System.out.println("Percentual de desconto inválido. O preço não foi alterado.");
-			
-			} else if (!disponivel) {
-				System.out.println("Não é possível aplicar desconto em um produto indisponível.");
-			
+	        
+        if (percentual <= 0 || percentual >= 100) {
+            System.out.println("Erro: Percentual inválido.");
+            return; // Verificação feita somente uma vez
+        }
 
-			} else { // percentual válido e produto disponível
-				BigDecimal novoPreco = calcularPrecoComDesconto(percentual);
-				preco = novoPreco;
-				System.out.println("Desconto de " + percentual + "% aplicado. Novo preço: R$ " + novoPreco);
-			}
-		}
-	}
+        if (!disponivel) {
+            System.out.println("Erro: Produto indisponível.");
+            return; 
+        }
+
+        // Obrigado pelo feedback, Prof. Elberth! Agora está mais limpo e nem precisou do else.
+        
+        BigDecimal novoPreco = calcularPrecoComDesconto(percentual);
+        this.preco = novoPreco;
+        System.out.println("Desconto de " + percentual + "% aplicado.");
+	    }
 	
 	// SOBRECARGA: Mesmo nome, parâmetros diferentes. Feature 03
     // Permite aplicar um desconto fixo em reais, em vez de porcentagem.
