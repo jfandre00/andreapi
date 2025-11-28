@@ -55,6 +55,7 @@ public class Produto {
         BigDecimal novoPreco = calcularPrecoComDesconto(percentual);
         this.preco = novoPreco;
         System.out.println("Desconto de " + percentual + "% aplicado.");
+        System.out.println("Novo preço: R$" + this.preco);
 	    }
 	
 	// SOBRECARGA: Mesmo nome, parâmetros diferentes. Feature 03
@@ -75,6 +76,7 @@ public class Produto {
                 // Arredonda para 2 casas
                 this.preco = this.preco.setScale(2, RoundingMode.HALF_UP);
                 System.out.println("Desconto de R$" + valorDescontoDouble + " aplicado.");
+                System.out.println("Novo preço: R$" + this.preco);
             }
         } else {
             // Se não for fixo, assume que é porcentagem e chama o outro método

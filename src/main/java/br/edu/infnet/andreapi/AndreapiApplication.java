@@ -2,9 +2,7 @@
 
 package br.edu.infnet.andreapi;
 
-import java.math.BigDecimal; // Para poder usar BigDecimal - Sugestão do Rayslan - Muito obrigado!
-import java.util.ArrayList;
-import java.util.List;
+import java.math.BigDecimal;
 import java.util.Scanner;
 
 import org.springframework.boot.SpringApplication;
@@ -13,6 +11,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import br.edu.infnet.andreapi.model.domain.Categoria;
 import br.edu.infnet.andreapi.model.domain.Produto;
 import br.edu.infnet.andreapi.model.domain.TipoCategoria;
+// Criação das classes de validação e servico após feedback do Rayslan (Feature 03) em 28-11-2025.
+import br.edu.infnet.andreapi.service.ProdutoService; // Camada de serviço
+import br.edu.infnet.andreapi.util.ValidacaoUtils;  // Utilitários de validação
 
 @SpringBootApplication
 public class AndreapiApplication {
@@ -21,9 +22,9 @@ public class AndreapiApplication {
         SpringApplication.run(AndreapiApplication.class, args);
         
         Scanner in = new Scanner(System.in);
+        // Instancia o serviço que irá gerenciar os produtos
+        ProdutoService produtoService = new ProdutoService(); 
         
-        // Usando Lista conforme o requisito da Feature 03
-        List<Produto> produtos = new ArrayList<>();
         int opcao = -1;
 
         do {
@@ -33,77 +34,42 @@ public class AndreapiApplication {
             System.out.println("3. Aplicar Desconto no Último Produto (Percentual)");
             System.out.println("4. Aplicar Desconto no Último Produto (Valor Fixo)");
             System.out.println("0. Sair");
-            System.out.print("Escolha uma opção: ");
             
-            if(in.hasNextInt()) {
-                opcao = in.nextInt();
-            } else {
-                in.next(); 
-                opcao = -1; 
-            }
-            in.nextLine(); 
+            // Usando a validação para a opção do menu
+            // Fiz uma modificação para usar o ValidacaoUtils, que garante a entrada correta. Por conta disso, o default do switch nunca será alcançado.
+            // Por isso removi do código. (28-11-2025)
+            
+            opcao = ValidacaoUtils.lerIntIntervalo(in, "Escolha uma opção: ", 0, 4);
 
             switch (opcao) {
                 case 1:
                     System.out.println("\n--- Cadastro de Produto ---");
                     
-                    System.out.print("Nome: ");
-                    String nome = in.nextLine();
+                    // mudança para acabar com o problema de entrada de dados vazia
+                    // através do lerString (Removi o System.out.print manual daqui)
+                    // com isso podemos remover o in.nextLine() referente aos problemas de buffer com o Scanner
+                      
+                    // também tenho um "problema" com preco, estoque e tipoOpcao, pois se o usuário digitar enter sem nada, o sistema pula uma linha.
+                    // Futuramente eu vou mudar para ler uma String e converter para int - OU OUTRA SOLUÇÃO QUE APRENDER EM BREVE
+                    // em relação a quebras, o programa está seguro. (28-11-2025)
                     
-
-                    double precoInput = -1; 
-                    while (precoInput < 0) {
-                        System.out.print("Preço: ");
-                        if (!in.hasNextDouble()) { 
-                            String entradaInvalida = in.next();
-                            System.out.println("O preço informado é inválido!! [" + entradaInvalida + "]");
-                        } else {
-                            double valorDigitado = in.nextDouble();
-                            if (valorDigitado < 0) {
-                                System.out.println("O preço não pode ser menor que zero!!");
-                            } else {
-                                precoInput = valorDigitado; // Valor válido, sai do loop
-                            }
-                        }
-                        in.nextLine(); // Limpa o buffer após ler (ou tentar ler) o número
-                    }
-                    // Alteração: Apesar de lermos double, vamos precisar converter para BigDecimal
-                    BigDecimal precoFinal = BigDecimal.valueOf(precoInput);
+                    String nome = ValidacaoUtils.lerString(in, "Nome: ");
                     
-                    int estoque = -1;
-                    while (estoque < 0) {
-                        System.out.print("Estoque: ");
-                        if (!in.hasNextInt()) {
-                            String entradaInvalida = in.next();
-                            System.out.println("O estoque informado é inválido!! [" + entradaInvalida + "]");
-                        } else {
-                            int valorDigitado = in.nextInt();
-                            if (valorDigitado < 0) {
-                                System.out.println("O estoque não pode ser negativo!!");
-                            } else {
-                                estoque = valorDigitado;
-                            }
-                        }
-                        in.nextLine(); 
-                    }
+                    // Chamando o utilitário para ler o preço
+                    BigDecimal preco = ValidacaoUtils.lerBigDecimal(in, "Preço: ");
+                    
+                    // Chamando o utilitário para ler o estoque
+                    int estoque = ValidacaoUtils.lerInt(in, "Estoque: ");
 
-                    System.out.print("Descrição: ");
-                    String descricao = in.nextLine();
+                    // mesma mudança para descrição
+                    String descricao = ValidacaoUtils.lerString(in, "Descrição: ");
 
                     System.out.println("--- Dados da Categoria ---");
-                    System.out.print("Descrição da Categoria (ex: Lanches): ");
-                    String descCat = in.nextLine();
+                    // mesma mudança para descrição da categoria
+                    String descCat = ValidacaoUtils.lerString(in, "Descrição da Categoria (ex: Lanches): ");
                     
-                    int tipoOpcao = 0;
-                    while (tipoOpcao < 1 || tipoOpcao > 3) {
-                        System.out.println("Tipo da Categoria: [1] Comida [2] Bebida [3] Sobremesa");
-                        if(in.hasNextInt()) {
-                            tipoOpcao = in.nextInt();
-                        } else {
-                            in.next();
-                        }
-                        in.nextLine();
-                    }
+                    // Chamando o utilitário para ler a opção (1, 2 ou 3)
+                    int tipoOpcao = ValidacaoUtils.lerIntIntervalo(in, "Tipo da Categoria: [1] Comida [2] Bebida [3] Sobremesa: ", 1, 3);
                     
                     TipoCategoria tipoSelecionado = TipoCategoria.OUTROS;
                     if(tipoOpcao == 1) tipoSelecionado = TipoCategoria.COMIDA;
@@ -111,24 +77,22 @@ public class AndreapiApplication {
                     else if(tipoOpcao == 3) tipoSelecionado = TipoCategoria.SOBREMESA;
 
                     Categoria novaCategoria = new Categoria(null, descCat, tipoSelecionado);
-                    
-                    // Passamos o BigDecimal precoFinal para o construtor
-                    Produto novoProduto = new Produto(nome, precoFinal, estoque, novaCategoria);
+                    Produto novoProduto = new Produto(nome, preco, estoque, novaCategoria);
                     
                     novoProduto.setDescricao(descricao); 
                     novoProduto.setDisponivel(true);
 
-                    produtos.add(novoProduto);
-                    
-                    System.out.println("Produto cadastrado com sucesso!");
+                    // O Serviço é quem lida com a lista
+                    produtoService.incluir(novoProduto);
                     break;
                     
                 case 2:
                     System.out.println("\n--- Lista de Produtos ---");
-                    if (produtos.isEmpty()) {
+                    // O Serviço retorna a lista
+                    if (produtoService.listarTodos().isEmpty()) {
                         System.out.println("Nenhum produto cadastrado.");
                     } else {
-                        for (Produto p : produtos) {
+                        for (Produto p : produtoService.listarTodos()) {
                             System.out.println(p);
                             System.out.println("-------------------------");
                         }
@@ -136,77 +100,29 @@ public class AndreapiApplication {
                     break;
                     
                 case 3:
-                    if (produtos.isEmpty()) {
-                        System.out.println("Cadastre um produto primeiro.");
-                    } else {
-                        Produto ultimoProduto = produtos.get(produtos.size() - 1);
-                        System.out.println("Aplicando desconto em: " + ultimoProduto.getNome()); 
-
-                        double porc = -1;
-                        while (porc <= 0 || porc >= 100) {
-                            System.out.print("Digite a % de desconto (entre 1 e 99): ");
-                            if(!in.hasNextDouble()) {
-                                in.next();
-                            } else {
-                                double valor = in.nextDouble();
-                                if (valor <= 0 || valor >= 100) {
-                                    System.out.println("A porcentagem deve ser maior que 0 e menor que 100.");
-                                } else {
-                                    porc = valor;
-                                }
-                            }
-                            in.nextLine();
-                        }
-                        
-                        
-                        // O método aceita double e converte internamente, então ok!
-                        ultimoProduto.aplicarDesconto(porc);
-                        System.out.println("Novo preço: " + ultimoProduto.getPreco()); 
-                    }
+                    // Chamando o utilitário para ler o percentual
+                    double porc = ValidacaoUtils.lerPercentual(in, "Digite a % de desconto (entre 1 e 99): ");
+                    // O Serviço aplica a regra
+                    produtoService.aplicarDescontoPercentual(porc);
                     break;
                 
                 case 4:
-                    if (produtos.isEmpty()) {
-                        System.out.println("Cadastre um produto primeiro.");
-                    } else {
-                        Produto ultimoProduto = produtos.get(produtos.size() - 1);
-                        System.out.println("Aplicando desconto FIXO em: " + ultimoProduto.getNome());
-
-                        double valor = -1;
-                        while (valor <= 0) {
-                            System.out.print("Digite o valor em R$ para descontar: ");
-                            if(!in.hasNextDouble()) {
-                                in.next();
-                            } else {
-                                double v = in.nextDouble();
-                                // A comparação de preço agora se faz necessária converter o double digitado para BigDecimal
-                                // Assim poderemos comparar com o preço do produto (que é BigDecimal)
-                                BigDecimal valorDigitadoBD = BigDecimal.valueOf(v);
-                                
-                                if (v <= 0) {
-                                    System.out.println("O desconto deve ser positivo.");
-                                } else if (ultimoProduto.getPreco().compareTo(valorDigitadoBD) <= 0) {
-                                    // compareTo retorna <= 0 se o preço for menor ou igual ao desconto
-                                    System.out.println("O desconto não pode ser maior que o preço do produto!");
-                                } else {
-                                    valor = v;
-                                }
-                            }
-                            in.nextLine();
-                        }
-                        
-                        ultimoProduto.aplicarDesconto(valor, true); 
-                        System.out.println("Novo preço: " + ultimoProduto.getPreco());
-                    }
+                    // Leitura e validação de desconto fixo (R$)
+                    BigDecimal valorBD = ValidacaoUtils.lerBigDecimal(in, "Digite o valor em R$ para descontar: ");
+                    
+                    // A validação de <<desconto maior que preço>> ainda deve ser feita no Service
+                    // Por simplicidade, passamos o valor e a lógica de verificação
+                    // é tratada no ProdutoService e Produto.
+                    produtoService.aplicarDescontoFixo(valorBD.doubleValue());
                     break;
                     
                 case 0:
                     System.out.println("Encerrando...");
                     break;
                     
-                default:
+                /*default:
                     System.out.println("Opção inválida.");
-                    break;
+                    break;*/
             }
 
             if (opcao != 0) {
