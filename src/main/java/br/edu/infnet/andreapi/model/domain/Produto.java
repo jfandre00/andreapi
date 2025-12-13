@@ -3,18 +3,18 @@ package br.edu.infnet.andreapi.model.domain;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-
-public class Produto {
+// Alteração para AT -> Agora Produto é abstract
+public abstract class Produto {
 	
 
-	// Tornei meus atributos privados
-	private int estoque;
-	private String nome;
-	private boolean disponivel;
-	private BigDecimal preco;
-	private String descricao;
+	// Atributos eram privados, para o AT viraram protected para as filhas (Comida e Bebida) acessarem
 	
-	private Categoria categoria; // Relacionamento com a classe Categoria
+	protected String nome;
+	protected BigDecimal preco;
+	protected int estoque;
+	protected boolean disponivel;
+	protected String descricao;
+	protected Categoria categoria; // Relacionamento com a classe Categoria
 	
 	// Construtor padrão
 	public Produto() {
@@ -27,9 +27,9 @@ public class Produto {
         this.disponivel = true; // Define um padrão
     }
 
-    // Construtor Completo (Chama o construtor acima para evitar duplicação)
+    // Construtor Completo 
     public Produto(String nome, BigDecimal preco, int estoque, Categoria categoria) {
-        this(nome, preco); // Chama o construtor de 2 parâmetros (Reaproveitamento)
+        this(nome, preco); // Feature 3/Feedback do Prof. Elberth: Construtor chamando outro para evitar duplicação
         this.estoque = estoque;
         this.categoria = categoria;
     }
@@ -99,47 +99,6 @@ public class Produto {
         return resultado.setScale(2, RoundingMode.HALF_UP);
 	}
 	
-	// Método toString() para representação textual
-	@Override
-    public String toString() {
-		// Verifica se a categoria é nula para evitar problemas
-        String categoriaStr = (categoria != null) ? categoria.toString() : "Sem categoria";
-        
-        return "Produto: " + nome + " | R$ " + preco + 
-               " | Estoque: " + estoque + 
-               " | Categoria: " + categoriaStr;
-    }
-	
-	
-	// Para a Feature 02: Vamos adicionar um "Status" calculado.
-    // Feature 03: Mantivemos o imprimirDetalhes antigo para compatibilidade, mas usando toString é melhor
-	public void imprimirDetalhes() {
-		// Código antigo comentado para referência
-		/*
-		String statusCalculado;
-		
-		if (disponivel && estoque > 0) {
-			statusCalculado = "Disponível em estoque";
-			
-		} else if (disponivel && estoque == 0) {
-			statusCalculado = "Disponível (Fora de estoque)";
-		
-		} else {
-			statusCalculado = "Indisponível (Cadastro inativo)";
-		}
-		
-		String detalhes = "Produto: " + nome + "\n" +
-						 "Preço: R$ " + preco + "\n" +
-						 "Estoque: " + estoque + " unidades\n" +
-						 "Descrição: " + descricao + "\n" +
-						 "Disponível: " + (disponivel ? "Sim" : "Não") +
-						 "\nStatus: " + statusCalculado;
-						 
-		System.out.println(detalhes);
-		*/
-		
-		System.out.println(this.toString());
-	}
 	
 	
 	/**
@@ -170,6 +129,50 @@ public class Produto {
             System.out.println("Mês " + mes + ": R$ " + precoAtual);
         }
     }
+	
+	// Método toString() para representação textual
+		@Override
+	    public String toString() {
+			// Verifica se a categoria é nula para evitar problemas
+	        String categoriaStr = (categoria != null) ? categoria.toString() : "Sem categoria";
+	        
+	        return "Produto: " + nome + " | R$ " + preco + 
+	               " | Estoque: " + estoque + 
+	               " | Categoria: " + categoriaStr;
+	    }
+		
+		
+		// Para a Feature 02: Vamos adicionar um "Status" calculado.
+	    // Feature 03: Mantivemos o imprimirDetalhes antigo para compatibilidade, mas usando toString é melhor
+		public void imprimirDetalhes() {
+			// Código antigo comentado para referência
+			/*
+			String statusCalculado;
+			
+			if (disponivel && estoque > 0) {
+				statusCalculado = "Disponível em estoque";
+				
+			} else if (disponivel && estoque == 0) {
+				statusCalculado = "Disponível (Fora de estoque)";
+			
+			} else {
+				statusCalculado = "Indisponível (Cadastro inativo)";
+			}
+			
+			String detalhes = "Produto: " + nome + "\n" +
+							 "Preço: R$ " + preco + "\n" +
+							 "Estoque: " + estoque + " unidades\n" +
+							 "Descrição: " + descricao + "\n" +
+							 "Disponível: " + (disponivel ? "Sim" : "Não") +
+							 "\nStatus: " + statusCalculado;
+							 
+			System.out.println(detalhes);
+			*/
+			
+			System.out.println(this.toString());
+		}
+		
+		
 	
 	//Métodos de Encapsulamento
     

@@ -8,7 +8,9 @@ import java.util.Scanner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import br.edu.infnet.andreapi.model.domain.Bebida;
 import br.edu.infnet.andreapi.model.domain.Categoria;
+import br.edu.infnet.andreapi.model.domain.Comida;
 import br.edu.infnet.andreapi.model.domain.Produto;
 import br.edu.infnet.andreapi.model.domain.TipoCategoria;
 // Criação das classes de validação e servico após feedback do Rayslan (Feature 03) em 28-11-2025.
@@ -24,7 +26,6 @@ public class AndreapiApplication {
         Scanner in = new Scanner(System.in);
         // Instancia o serviço que irá gerenciar os produtos
         ProdutoService produtoService = new ProdutoService(); 
-        
         int opcao = -1;
 
         do {
@@ -53,6 +54,11 @@ public class AndreapiApplication {
                     // Futuramente eu vou mudar para ler uma String e converter para int - OU OUTRA SOLUÇÃO QUE APRENDER EM BREVE
                     // em relação a quebras, o programa está seguro. (28-11-2025)
                     
+                    // Implementações do AT -------------------
+                    
+                    int tipoProduto = ValidacaoUtils.lerIntIntervalo(in, "O que deseja cadastrar? [1] Comida [2] Bebida: ", 1, 2);
+                    
+                    // Dados que todos têm em comum
                     String nome = ValidacaoUtils.lerString(in, "Nome: ");
                     
                     // Chamando o utilitário para ler o preço
@@ -66,24 +72,57 @@ public class AndreapiApplication {
 
                     System.out.println("--- Dados da Categoria ---");
                     // mesma mudança para descrição da categoria
-                    String descCat = ValidacaoUtils.lerString(in, "Descrição da Categoria (ex: Lanches): ");
+                    String descCat = ValidacaoUtils.lerString(in, "Descrição da Categoria (ex: Lanches/Sucos): ");
                     
-                    // Chamando o utilitário para ler a opção (1, 2 ou 3)
-                    int tipoOpcao = ValidacaoUtils.lerIntIntervalo(in, "Tipo da Categoria: [1] Comida [2] Bebida [3] Sobremesa: ", 1, 3);
-                    
+                   // Resolvendo o problema de ter criado classes novas com o Enum TipoCategoria
                     TipoCategoria tipoSelecionado = TipoCategoria.OUTROS;
-                    if(tipoOpcao == 1) tipoSelecionado = TipoCategoria.COMIDA;
-                    else if(tipoOpcao == 2) tipoSelecionado = TipoCategoria.BEBIDA;
-                    else if(tipoOpcao == 3) tipoSelecionado = TipoCategoria.SOBREMESA;
+                    
+                    if (tipoProduto == 2) {
+                        // Se já escolheu Bebida lá em cima está pronto, não precisa perguntar de novo
+                        tipoSelecionado = TipoCategoria.BEBIDA;
+                        System.out.println("Categoria definida automaticamente como: BEBIDA");
+                        
+                    } else {
+                        // Se escolheu Comida, precisamos saber se é Sobremesa ou Comida
+                        boolean isSobremesa = ValidacaoUtils.lerBoolean(in, "Este item é uma Sobremesa?");
+                        
+                        if (isSobremesa) {
+                            tipoSelecionado = TipoCategoria.SOBREMESA;
+                        } else {
+                            tipoSelecionado = TipoCategoria.COMIDA;
+                        }
+                    }
 
                     Categoria novaCategoria = new Categoria(null, descCat, tipoSelecionado);
-                    Produto novoProduto = new Produto(nome, preco, estoque, novaCategoria);
+                    Produto novoItem = null; // Utilizando a mãe Produto - Polimorfismo
                     
-                    novoProduto.setDescricao(descricao); 
-                    novoProduto.setDisponivel(true);
+                    
+                    if (tipoProduto == 1) {
+                        // É Comida -> Pede peso e se é orgânico
+                        System.out.println("--- Detalhes da Comida ---");
+                        float peso = ValidacaoUtils.lerFloat(in, "Peso (kg): ");
+                        boolean organico = ValidacaoUtils.lerBoolean(in, "É orgânico?");
+                        
+                        // Instancia Comida
+                        novoItem = new Comida(nome, preco, estoque, novaCategoria, peso, organico);
+                        
+                    } else { // Posso usar else aqui porque a validação já garante que só pode ser 1 ou 2 
+                        // É Bebida -> Pede ml e se é alcoólica
+                        System.out.println("--- Detalhes da Bebida ---");
+                        int ml = ValidacaoUtils.lerInt(in, "Tamanho (ml): ");
+                        boolean alcoolica = ValidacaoUtils.lerBoolean(in, "É alcoólica?");
+                        
+                        // Instancia Bebida
+                        novoItem = new Bebida(nome, preco, estoque, novaCategoria, ml, alcoolica);
+                    }
+                    
+                    
+                    // Configura dados comuns restantes
+                    novoItem.setDescricao(descricao); 
+                    novoItem.setDisponivel(true);
 
                     // O Serviço é quem lida com a lista
-                    produtoService.incluir(novoProduto);
+                    produtoService.incluir(novoItem);
                     break;
                     
                 case 2:
@@ -119,8 +158,9 @@ public class AndreapiApplication {
                 case 0:
                     System.out.println("Encerrando...");
                     break;
-                    
-                /*default:
+                 
+                // Removido após implementação do ValidacaoUtils pois virou redundante   
+                /*default: 
                     System.out.println("Opção inválida.");
                     break;*/
             }

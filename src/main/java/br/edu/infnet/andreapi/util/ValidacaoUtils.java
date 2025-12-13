@@ -110,4 +110,44 @@ public class ValidacaoUtils {
             System.out.println("Erro: Este campo não pode ficar vazio!");
         }
     }
+    
+    // ----------------------------------------------------------------------------
+    // Implementações do AT
+    
+    // Método para ler um float positivo (usado para Peso em Kg)
+    public static float lerFloat(Scanner in, String prompt) {
+        float valorFinal = -1;
+        while (valorFinal <= 0) {
+            System.out.print(prompt);
+            if (!in.hasNextFloat()) {
+                String entradaInvalida = in.next();
+                System.out.println("Erro: Entrada inválida! [" + entradaInvalida + "]");
+            } else {
+                float valorDigitado = in.nextFloat();
+                if (valorDigitado <= 0) {
+                    System.out.println("O valor deve ser positivo!");
+                } else {
+                    valorFinal = valorDigitado;
+                }
+            }
+            in.nextLine();
+        }
+        return valorFinal;
+    }
+    
+    // Lê Sim ou Não e retorna true/false
+    public static boolean lerBoolean(Scanner in, String prompt) {
+        while (true) {
+            System.out.print(prompt + " [S/N]: ");
+            String entrada = in.nextLine().trim().toUpperCase(); // garantir que está em maiúsculo
+            
+            if (entrada.equals("S") || entrada.equals("SIM")) {
+                return true;
+            } else if (entrada.equals("N") || entrada.equals("NAO") || entrada.equals("NÃO")) {
+                return false;
+            } else {
+                System.out.println("Opção inválida! Digite 'S' para Sim ou 'N' para Não.");
+            }
+        }
+    }
 }
