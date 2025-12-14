@@ -13,6 +13,7 @@ import br.edu.infnet.andreapi.model.domain.Categoria;
 import br.edu.infnet.andreapi.model.domain.Comida;
 import br.edu.infnet.andreapi.model.domain.Produto;
 import br.edu.infnet.andreapi.model.domain.TipoCategoria;
+import br.edu.infnet.andreapi.model.exceptions.ValorInvalidoException;
 // Criação das classes de validação e servico após feedback do Rayslan (Feature 03) em 28-11-2025.
 import br.edu.infnet.andreapi.service.ProdutoService; // Camada de serviço
 import br.edu.infnet.andreapi.util.ValidacaoUtils;  // Utilitários de validação
@@ -34,13 +35,14 @@ public class AndreapiApplication {
             System.out.println("2. Listar Todos os Produtos");
             System.out.println("3. Aplicar Desconto no Último Produto (Percentual)");
             System.out.println("4. Aplicar Desconto no Último Produto (Valor Fixo)");
+            System.out.println("5. Listar Últimos 3 Produtos Cadastrados"); // AT
             System.out.println("0. Sair");
             
             // Usando a validação para a opção do menu
             // Fiz uma modificação para usar o ValidacaoUtils, que garante a entrada correta. Por conta disso, o default do switch nunca será alcançado.
             // Por isso removi do código. (28-11-2025)
             
-            opcao = ValidacaoUtils.lerIntIntervalo(in, "Escolha uma opção: ", 0, 4);
+            opcao = ValidacaoUtils.lerIntIntervalo(in, "Escolha uma opção: ", 0, 5);
 
             switch (opcao) {
                 case 1:
@@ -140,9 +142,13 @@ public class AndreapiApplication {
                     
                 case 3:
                     // Chamando o utilitário para ler o percentual
-                    double porc = ValidacaoUtils.lerPercentual(in, "Digite a % de desconto (entre 1 e 99): ");
-                    // O Serviço aplica a regra
-                    produtoService.aplicarDescontoPercentual(porc);
+                    double porc = ValidacaoUtils.lerPercentual(in, "Digite o % de desconto (maior que 0 e menor que 100): ");
+                    try
+                    {
+                    	produtoService.aplicarDescontoPercentual(porc);
+                    } catch (ValorInvalidoException e) {
+						System.out.println("Erro ao aplicar desconto: " + e.getMessage());
+					}
                     break;
                 
                 case 4:
@@ -152,8 +158,18 @@ public class AndreapiApplication {
                     // A validação de <<desconto maior que preço>> ainda deve ser feita no Service
                     // Por simplicidade, passamos o valor e a lógica de verificação
                     // é tratada no ProdutoService e Produto.
-                    produtoService.aplicarDescontoFixo(valorBD.doubleValue());
+                    try {
+                    	produtoService.aplicarDescontoFixo(valorBD.doubleValue());
+                    } catch (ValorInvalidoException e) {
+                    	System.out.println("Erro ao aplicar desconto: " + e.getMessage());
+                    }
+                    
                     break;
+                
+                    // Criando o case 5 para listar os últimos 3 cadastrados (AT)
+                case 5:
+                    produtoService.listarUltimos();
+                
                     
                 case 0:
                     System.out.println("Encerrando...");

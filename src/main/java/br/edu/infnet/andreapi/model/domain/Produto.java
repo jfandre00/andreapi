@@ -3,10 +3,15 @@ package br.edu.infnet.andreapi.model.domain;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-// Alteração para AT -> Agora Produto é abstract
-public abstract class Produto {
+import br.edu.infnet.andreapi.model.exceptions.ValorInvalidoException;
+
+// Alteração para AT -> Agora Produto é abstract e utiliza uma Interface
+public abstract class Produto implements IPrinter {
 	
 
+	// Constante de taxa padrão de serviço que o InfnetFood cobra (10%)
+	public static final float TAXA_PADRAO_SERVICO = 0.10f; 
+	
 	// Atributos eram privados, para o AT viraram protected para as filhas (Comida e Bebida) acessarem
 	
 	protected String nome;
@@ -38,16 +43,17 @@ public abstract class Produto {
 	// Feature 01: Método público que aplica um desconto ao preço do produto. Ele chama um método privado para fazer o cálculo.
 	// Para a Feature 02, esse método irá verificar multiplas condições antes de aplicar o desconto.
     // Refatorei o método após o feedback do Prof. Elberth pois havia uma verificação redundante. (25-11-2025)
-	public void aplicarDesconto(double percentual) {
+    // para o AT: Adicionei o 'throws ValorInvalidoException' para que o método possa lançar a exceção personalizada
+	public void aplicarDesconto(double percentual) throws ValorInvalidoException {
 	        
         if (percentual <= 0 || percentual >= 100) {
-            System.out.println("Erro: Percentual inválido.");
-            return; // Verificação feita somente uma vez
+        	
+        	// Não usarei mais o System.out.println aqui
+        	throw new ValorInvalidoException("O percentual de desconto deve ser entre 1% e 99%.");
         }
 
         if (!disponivel) {
-            System.out.println("Erro: Produto indisponível.");
-            return; 
+        	throw new ValorInvalidoException("Não é possível aplicar desconto em produto indisponível.");
         }
 
         // Obrigado pelo feedback, Prof. Elberth! Agora está mais limpo e nem precisou do else.
@@ -60,26 +66,29 @@ public abstract class Produto {
 	
 	// SOBRECARGA: Mesmo nome, parâmetros diferentes. Feature 03
     // Permite aplicar um desconto fixo em reais, em vez de porcentagem.
-    public void aplicarDesconto(double valorDescontoDouble, boolean isValorFixo) {
+	// para o AT: Adicionei o 'throws ValorInvalidoException' para que o método possa lançar a exceção personalizada
+    public void aplicarDesconto(double valorDescontoDouble, boolean isValorFixo) throws ValorInvalidoException {
         if (isValorFixo) {
         	
         	// Convertendo o double recebido para BigDecimal para fazer a conta
             BigDecimal valorDesconto = BigDecimal.valueOf(valorDescontoDouble);
             
-            // Comparações em BigDecimal usam .compareTo()
-            // se preco < valorDesconto
-            if (this.preco.compareTo(valorDesconto) < 0) {
-                System.out.println("Erro: Desconto maior que o preço.");
-            } else {
-                // Subtração: this.preco = this.preco.subtract(valorDesconto)
-                this.preco = this.preco.subtract(valorDesconto);
-                // Arredonda para 2 casas
-                this.preco = this.preco.setScale(2, RoundingMode.HALF_UP);
-                System.out.println("Desconto de R$" + valorDescontoDouble + " aplicado.");
-                System.out.println("Novo preço: R$" + this.preco);
-            }
+            if (valorDesconto.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new ValorInvalidoException("O valor do desconto deve ser positivo.");
+           }
+           
+           if (this.preco.compareTo(valorDesconto) < 0) {
+               throw new ValorInvalidoException("O valor do desconto (" + valorDesconto + ") é maior que o preço do produto (" + this.preco + ").");
+           } 
+           
+           // Se passou das validações vai aplicar o desconto
+           this.preco = this.preco.subtract(valorDesconto);
+           this.preco = this.preco.setScale(2, RoundingMode.HALF_UP);
+           System.out.println("Desconto de R$" + valorDescontoDouble + " aplicado.");
+           System.out.println("Novo preço: R$" + this.preco);
         } else {
             // Se não for fixo, assume que é porcentagem e chama o outro método
+        	// E esse método abaixo já lança a exceção se houver problema
             aplicarDesconto(valorDescontoDouble);
         }
     }
@@ -171,6 +180,15 @@ public abstract class Produto {
 			
 			System.out.println(this.toString());
 		}
+		
+		// Implementação obrigatória do método da interface - coloquei na classe mãe para as filhas herdarem, pois o relatório é igual
+	    @Override
+	    public void imprimirRelatorio() {
+	        System.out.println("### RELATÓRIO DO PRODUTO ###");
+	        System.out.println(this.toString());
+	        System.out.println("Taxa de Serviço Padrão: " + (TAXA_PADRAO_SERVICO * 100) + "%");
+	        System.out.println("############################");
+	    }
 		
 		
 	
