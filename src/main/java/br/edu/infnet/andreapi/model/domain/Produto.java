@@ -2,7 +2,9 @@ package br.edu.infnet.andreapi.model.domain;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Locale;
 
+import br.edu.infnet.andreapi.interfaces.IPrinter;
 import br.edu.infnet.andreapi.model.exceptions.ValorInvalidoException;
 
 // Alteração para AT -> Agora Produto é abstract e utiliza uma Interface
@@ -12,8 +14,11 @@ public abstract class Produto implements IPrinter {
 	// Constante de taxa padrão de serviço que o InfnetFood cobra (10%)
 	public static final float TAXA_PADRAO_SERVICO = 0.10f; 
 	
-	// Atributos eram privados, para o AT viraram protected para as filhas (Comida e Bebida) acessarem
+	// AT: Modificador default - ele será visível apenas dentro do domain
+	// Podemos usar esse atributo para controle interno, somente as classes do domain terão acesso
+	String codigoControleInterno;
 	
+	// Atributos eram privados, para o AT viraram protected para as filhas (Comida e Bebida) acessarem
 	protected String nome;
 	protected BigDecimal preco;
 	protected int estoque;
@@ -30,6 +35,8 @@ public abstract class Produto implements IPrinter {
         this.nome = nome;
         this.preco = preco;
         this.disponivel = true; // Define um padrão
+        // Inicializa o default
+        this.codigoControleInterno = "CONTROLE-PADRAO";
     }
 
     // Construtor Completo 
@@ -139,15 +146,21 @@ public abstract class Produto implements IPrinter {
         }
     }
 	
-	// Método toString() para representação textual
+		// Método toString() para representação textual
 		@Override
 	    public String toString() {
 			// Verifica se a categoria é nula para evitar problemas
 	        String categoriaStr = (categoria != null) ? categoria.toString() : "Sem categoria";
+	       
 	        
-	        return "Produto: " + nome + " | R$ " + preco + 
-	               " | Estoque: " + estoque + 
-	               " | Categoria: " + categoriaStr;
+	     // Locale.US para garantir que saia 39.90 e não 39,90 e com 2 casas decimais, padronizando a saída
+	        return String.format(Locale.US, 
+	            "Produto: %-35s | R$ %6.2f | Estoque: %03d un. | Categoria: %-40s", 
+	            this.nome, 
+	            this.preco, 
+	            this.estoque, 
+	            categoriaStr
+	        );
 	    }
 		
 		

@@ -96,4 +96,16 @@ public class ProdutoService {
         }
         return produtos.get(produtos.size() - 1);
     }
+    
+    // NOVO MÉTODO APÓS TESTE FINAL DO AT : Carrega uma lista inteira (do arquivo) sem imprimir relatórios individuais
+    // sempre que inicializava o sistema, os relatórios eram exibidos, quero apenas carregar os dados na memória sem mostrar nada
+    public void carregarProdutosDoArquivo(List<Produto> produtosDoArquivo) {
+        // Adiciona todos os produtos do arquivo na lista principal de uma vez
+        this.produtos.addAll(produtosDoArquivo);
+        
+        // Atualiza o array fixo dos últimos cadastrados
+        for (Produto p : produtosDoArquivo) {
+            atualizarUltimosCadastrados(p);
+        }
+    }
 }

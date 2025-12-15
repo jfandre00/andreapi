@@ -1,0 +1,7 @@
+C;0.35;false;X-Burger Completo;39.9;10;Lanches;COMIDA
+B;350;false;Coca-Cola Zero;8.5;15;Refrigerantes;BEBIDA
+C;0.2;true;Coxinha de Frango;15.0;12;Lanches;COMIDA
+B;300;false;Milk Shake;29.9;14;Bebíveis;BEBIDA
+B;600;true;Cerveja Original;15.0;12;Refrescos;BEBIDA
+C;1.0;false;Pizza;53.91;12;Refeições para dividir;COMIDA
+C;0.1;true;Caviar Russo;225.33;2;Comida Chique;COMIDA

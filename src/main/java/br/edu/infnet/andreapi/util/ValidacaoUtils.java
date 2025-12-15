@@ -79,7 +79,14 @@ public class ValidacaoUtils {
     
     // método que lê um inteiro mas obriga a estar entre min e max
     public static int lerIntIntervalo(Scanner in, String prompt, int min, int max) {
-        int valor;
+    	
+    	// AT: Lançando uma Unchecked Exception (RuntimeException)
+        // Se acontecer uma inversão entre min e max, o sistema avisa
+        // Não vai precisar de throws na assinatura porque é Unchecked
+        if (min > max) {
+            throw new IllegalArgumentException("Erro de Código: O valor mínimo (" + min + ") não pode ser maior que o máximo (" + max + ").");
+        }
+    	int valor;
         while (true) {
             // Reutiliza o lerInt para garantir que é um número inteiro positivo
             valor = lerInt(in, prompt); 

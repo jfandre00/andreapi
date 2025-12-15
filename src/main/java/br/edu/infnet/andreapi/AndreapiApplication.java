@@ -3,6 +3,7 @@
 package br.edu.infnet.andreapi;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Scanner;
 
 import org.springframework.boot.SpringApplication;
@@ -14,6 +15,7 @@ import br.edu.infnet.andreapi.model.domain.Comida;
 import br.edu.infnet.andreapi.model.domain.Produto;
 import br.edu.infnet.andreapi.model.domain.TipoCategoria;
 import br.edu.infnet.andreapi.model.exceptions.ValorInvalidoException;
+import br.edu.infnet.andreapi.service.ArquivoService;
 // Criação das classes de validação e servico após feedback do Rayslan (Feature 03) em 28-11-2025.
 import br.edu.infnet.andreapi.service.ProdutoService; // Camada de serviço
 import br.edu.infnet.andreapi.util.ValidacaoUtils;  // Utilitários de validação
@@ -27,6 +29,14 @@ public class AndreapiApplication {
         Scanner in = new Scanner(System.in);
         // Instancia o serviço que irá gerenciar os produtos
         ProdutoService produtoService = new ProdutoService(); 
+        
+        // AT: Adicionando o arquivo
+        ArquivoService arquivoService = new ArquivoService();
+        
+        // vamos ler o arquivo no início do programa SEM mostar nada na tela ao iniciar, que estava me incomodando
+        List<Produto> produtosSalvos = arquivoService.lerArquivo();
+        produtoService.carregarProdutosDoArquivo(produtosSalvos);
+        
         int opcao = -1;
 
         do {
@@ -128,14 +138,16 @@ public class AndreapiApplication {
                     break;
                     
                 case 2:
-                    System.out.println("\n--- Lista de Produtos ---");
+                	String tracos = "-".repeat(70);
+                	String tracosBaixo = "-".repeat(160);
+                	System.out.println("\n" + tracos + " Lista de Produtos " + tracos + "\n");
                     // O Serviço retorna a lista
                     if (produtoService.listarTodos().isEmpty()) {
                         System.out.println("Nenhum produto cadastrado.");
                     } else {
                         for (Produto p : produtoService.listarTodos()) {
                             System.out.println(p);
-                            System.out.println("-------------------------");
+                            System.out.println(tracosBaixo);
                         }
                     }
                     break;
@@ -143,11 +155,14 @@ public class AndreapiApplication {
                 case 3:
                     // Chamando o utilitário para ler o percentual
                     double porc = ValidacaoUtils.lerPercentual(in, "Digite o % de desconto (maior que 0 e menor que 100): ");
+                    // AT: Aplicando o desconto com tratamento de exceção
                     try
                     {
                     	produtoService.aplicarDescontoPercentual(porc);
                     } catch (ValorInvalidoException e) {
 						System.out.println("Erro ao aplicar desconto: " + e.getMessage());
+					} finally {
+						System.out.println("Aplicação de desconto finalizada.");
 					}
                     break;
                 
@@ -158,11 +173,14 @@ public class AndreapiApplication {
                     // A validação de <<desconto maior que preço>> ainda deve ser feita no Service
                     // Por simplicidade, passamos o valor e a lógica de verificação
                     // é tratada no ProdutoService e Produto.
+                    // AT: Aplicando o desconto fixo com tratamento de exceção
                     try {
                     	produtoService.aplicarDescontoFixo(valorBD.doubleValue());
                     } catch (ValorInvalidoException e) {
                     	System.out.println("Erro ao aplicar desconto: " + e.getMessage());
-                    }
+                    } finally {
+						System.out.println("Aplicação de desconto finalizada.");
+					}
                     
                     break;
                 
@@ -172,7 +190,12 @@ public class AndreapiApplication {
                 
                     
                 case 0:
-                    System.out.println("Encerrando...");
+                	// AT: Adicionando a escrita do arquivo ao sair do sistema
+                	System.out.println("\nGravando dados no arquivo...");
+                	
+                	arquivoService.gravarArquivo(produtoService.listarTodos());
+                    
+                	System.out.println("Encerrando...");
                     break;
                  
                 // Removido após implementação do ValidacaoUtils pois virou redundante   

@@ -1,4 +1,4 @@
-package br.edu.infnet.andreapi.model.domain;
+package br.edu.infnet.andreapi.interfaces;
 
 public interface IPrinter {
 	
